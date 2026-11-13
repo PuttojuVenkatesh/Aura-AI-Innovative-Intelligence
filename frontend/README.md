@@ -192,9 +192,17 @@ The Vite entry page is `index.html`, which loads `src/main.jsx`. The top-level `
 
 ## Backend connection and production hosting
 
-The development proxy forwards both `/api` and `/health` to `http://127.0.0.1:8000`. This is why the browser can use relative URLs during `npm run dev`.
+The development proxy forwards both `/api` and `/health` to `http://127.0.0.1:8000`. This is why the browser can use relative URLs during `npm run dev`. In production, the frontend uses `VITE_API_URL` as the base URL for all API and health requests.
 
-The proxy only applies to the Vite development server. This repository does not include Vercel, Netlify, or other hosting configuration. For production, host the built `dist/` files and configure the same origin or the hosting platform's reverse proxy to send `/api` and `/health` requests to FastAPI. Configure CORS and authentication on the backend before exposing it beyond a trusted environment. Do not put Groq or database credentials in frontend files; browser bundles are public.
+The proxy only applies to the Vite development server. For a Vercel frontend and Render backend:
+
+1. In Vercel, open the Aura AI project settings and add the environment variable `VITE_API_URL` with the Render backend's base URL, for example `https://your-service.onrender.com` (no trailing slash).
+2. Apply it to the Production environment (and Preview too, if needed).
+3. Redeploy the frontend so Vite bakes the variable into the production bundle.
+4. Open `https://your-service.onrender.com/health` and confirm it returns HTTP 200.
+5. Reload the Vercel site and check the browser's Network panel to confirm `/health` and `/api/...` requests go to the Render host.
+
+This repository does not include Vercel or Render deployment manifests. Configure CORS and authentication on the backend before exposing it beyond a trusted environment. Do not put Groq or database credentials in frontend files; browser bundles are public. `VITE_API_URL` is a public service URL, not a secret.
 
 ## More troubleshooting
 

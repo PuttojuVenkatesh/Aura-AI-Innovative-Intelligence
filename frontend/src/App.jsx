@@ -3,6 +3,12 @@ import Icon from "./components/Icon.jsx";
 import LandingPage from "./components/LandingPage.jsx";
 import Workspace from "./components/Workspace.jsx";
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "").trim().replace(/\/+$/, "");
+
+function apiUrl(path) {
+  return `${API_BASE_URL}${path}`;
+}
+
 function errorText(response, fallback) {
   return response.json().then((data) => {
     const detail = data?.detail;
@@ -76,7 +82,7 @@ export default function App() {
   const checkBackend = useCallback(async () => {
     setBackendState("checking");
     try {
-      const response = await fetch("/health");
+      const response = await fetch(apiUrl("/health"));
       if (!response.ok) throw new Error("Health check failed");
       setBackendState("online");
       return true;
@@ -87,7 +93,7 @@ export default function App() {
   }, []);
 
   const refreshSessions = useCallback(async () => {
-    const response = await fetch("/api/conversations");
+    const response = await fetch(apiUrl("/api/conversations"));
     if (!response.ok) throw new Error(await errorText(response, "Could not load conversation history."));
     const data = await response.json();
     const items = Array.isArray(data) ? data : data.conversations || [];
@@ -97,7 +103,7 @@ export default function App() {
 
   const openArchives = useCallback(async () => {
     try {
-      const response = await fetch("/api/conversations/archived");
+      const response = await fetch(apiUrl("/api/conversations/archived"));
       if (!response.ok) throw new Error(await errorText(response, "Could not load archived conversations."));
       setArchivedSessions(await response.json());
       setArchiveOpen(true);
@@ -108,7 +114,7 @@ export default function App() {
 
   const archiveSession = useCallback(async (session) => {
     try {
-      const response = await fetch(`/api/conversations/${encodeURIComponent(session.session_id)}/archive`, { method: "POST" });
+      const response = await fetch(apiUrl(`/api/conversations/${encodeURIComponent(session.session_id)}/archive`), { method: "POST" });
       if (!response.ok) throw new Error(await errorText(response, "Could not archive this conversation."));
       await refreshSessions();
       if (selectedSessionId === session.session_id) {
@@ -125,7 +131,7 @@ export default function App() {
 
   const restoreArchivedSession = useCallback(async (session) => {
     try {
-      const response = await fetch(`/api/conversations/${encodeURIComponent(session.session_id)}/restore`, { method: "POST" });
+      const response = await fetch(apiUrl(`/api/conversations/${encodeURIComponent(session.session_id)}/restore`), { method: "POST" });
       if (!response.ok) throw new Error(await errorText(response, "Could not restore this conversation."));
       setArchivedSessions((items) => items.filter((item) => item.session_id !== session.session_id));
       await refreshSessions();
@@ -146,7 +152,7 @@ export default function App() {
     setMetadata(null);
     setLoadingMessages(true);
     try {
-      const response = await fetch(`/api/conversations/${encodeURIComponent(session.session_id)}/messages`);
+      const response = await fetch(apiUrl(`/api/conversations/${encodeURIComponent(session.session_id)}/messages`));
       if (!response.ok) throw new Error(await errorText(response, "Could not load this conversation."));
       const data = await response.json();
       const loaded = data.map((message, index) => ({
@@ -246,7 +252,7 @@ export default function App() {
     };
 
     try {
-      const response = await fetch("/api/analyze/stream", {
+      const response = await fetch(apiUrl("/api/analyze/stream"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
         body: JSON.stringify({

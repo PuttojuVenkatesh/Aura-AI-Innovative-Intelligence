@@ -270,4 +270,4 @@ npm run build
 npm run preview
 ```
 
-The project does not include provider-specific deployment configuration. A production deployment must provide the Groq/database environment variables, route frontend API requests to FastAPI, and restrict CORS and network access appropriately.
+The project does not include provider-specific deployment manifests. The frontend reads the public FastAPI base URL from `VITE_API_URL`; set it in the frontend host (for example, Vercel) to the backend host (for example, Render), then rebuild/redeploy the frontend. The backend host must receive its own Groq/database environment variables. Configure CORS and access controls before exposing the API publicly. See [frontend/README.md](frontend/README.md#backend-connection-and-production-hosting) for deployment steps.

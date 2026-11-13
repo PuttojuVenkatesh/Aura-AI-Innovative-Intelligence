@@ -311,9 +311,9 @@ export default function App() {
       } else {
         addAssistant(answer, { streaming: false });
         if (!incognito) {
-          const updatedSessions = await refreshSessions();
-          const updated = updatedSessions.find((item) => item.session_id === sessionId);
-          if (updated?.title) setSelectedTitle(updated.title);
+          refreshSessions().catch((error) => {
+            notify(error.message || "The conversation list could not be refreshed.");
+          });
         }
       }
     } catch (error) {

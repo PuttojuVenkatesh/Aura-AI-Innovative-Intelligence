@@ -464,7 +464,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .starter-grid { display: grid; width: min(100%, 440px); gap: 8px; }
 .starter-grid button { display: flex; min-height: 40px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--text); font-size: 10px; text-align: left; cursor: pointer; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
 .starter-grid button:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--primary) 40%, var(--line)); background: var(--primary-tint); color: var(--primary); }
-.composer-area { padding: 10px clamp(17px, 4vw, 51px) 12px; border-top: 1px solid var(--line); background: var(--surface); }
+.composer-area { flex: 0 0 auto; padding: 10px clamp(17px, 4vw, 51px) 12px; border-top: 1px solid var(--line); background: var(--surface); }
 .composer { max-width: 850px; margin: 0 auto; padding: 11px 12px 8px; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); box-shadow: 0 4px 13px rgba(30, 41, 59, .035); transition: border-color .18s ease, box-shadow .18s ease; }
 .composer:focus-within { border-color: color-mix(in srgb, var(--primary) 45%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 8%, transparent), 0 5px 15px rgba(30,41,59,.04); }
 .composer textarea { display: block; width: 100%; min-height: 28px; max-height: 160px; resize: none; padding: 2px 2px 9px; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 11px; line-height: 1.6; }

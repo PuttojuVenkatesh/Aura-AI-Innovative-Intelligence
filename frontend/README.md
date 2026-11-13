@@ -76,3 +76,143 @@ The production build is written to `dist/`. The Vite development proxy is not in
 | `npm` is not recognized | Install Node.js and open a new PowerShell terminal |
 | Insights are not visible | Click **Message insights** at the top-right of the workspace |
 | Frontend build fails | Confirm the Node.js version meets Vite 7 requirements, then run `npm install` |
+
+## Complete first-time setup
+
+The frontend depends on a running backend for the chat experience. If this is a fresh setup, prepare both sides before sending a message.
+
+### 1. Check Node.js
+
+Open PowerShell and run:
+
+```powershell
+node --version
+npm --version
+```
+
+Use a Node.js release supported by Vite 7: version 20.19 or newer in the 20.x line, or version 22.12 or newer in the 22.x line.
+
+### 2. Install frontend packages
+
+From the project root:
+
+```powershell
+cd frontend
+npm install
+```
+
+`npm install` reads `package.json` and `package-lock.json`. Run it once after cloning the project, or again after package dependencies change.
+
+### 3. Start the backend first
+
+In another PowerShell terminal:
+
+```powershell
+cd backend
+.\venv\Scripts\Activate.ps1
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+The backend environment must already be created and configured with a Groq API key. See [the backend setup guide](../backend/README.md#full-first-time-setup). Confirm [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health) responds before continuing.
+
+### 4. Start Vite
+
+In the terminal where you installed packages:
+
+```powershell
+npm run dev
+```
+
+Vite binds to `127.0.0.1:5173`. The server uses `strictPort`, so it fails rather than silently switching to a different port if 5173 is occupied. Stop the process with `Ctrl+C`.
+
+### 5. Try a conversation
+
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173), click **Get started**, and submit a prompt. The left sidebar displays saved sessions. The assistant message streams into the conversation, and the analysis panel can show the latest intent, risk profile, priority, required-action flag, token estimate, and summary.
+
+## What happens when you send a message
+
+1. The composer trims the message and sends it to `POST /api/analyze/stream`.
+2. During local development, Vite forwards the request to FastAPI on port 8000.
+3. The backend first classifies the message. Once metadata arrives, the frontend updates the insight panel.
+4. The backend streams answer fragments as SSE `token` events. The frontend appends them to the assistant message.
+5. On a `done` event, a regular conversation is saved by the backend and the sidebar refreshes.
+
+When Incognito is enabled, the browser sends recent in-memory messages as context, and the backend does not save that exchange. The actual message still reaches the configured AI provider.
+
+## Using the workspace
+
+### Conversation history
+
+- **New chat** clears the selected conversation and starts a fresh session.
+- Use the sidebar search to find a saved conversation by its title or latest preview.
+- Select an entry to load its saved messages.
+- Select the archive icon on a chat to move it to the archive.
+- Open **Archived chats** at the bottom of the sidebar to restore an entry. Expired archives are removed after at most 30 days.
+
+Incognito mode hides saved chats from the sidebar and starts a fresh in-memory conversation. Switching modes clears the currently displayed conversation so saved context is not accidentally continued in the other mode.
+
+### Message insights
+
+Click **Message insights** in the top-right chat toolbar to show or hide the panel. On narrow screens the panel opens as an overlay. It displays the latest backend analysis rather than independently evaluating the message in the browser. The token number is an estimate and is not billed usage.
+
+### Composer, attachments, and voice
+
+- Press **Enter** to send. Press **Shift+Enter** to add a line break.
+- Text attachments support `.txt`, `.md`, `.csv`, `.json`, and `.log`; files larger than 200 KB are rejected. Only the beginning of the file content is included in the prompt.
+- Voice input uses the browser's Speech Recognition API. It may not be available in every browser or operating system; type the message if the microphone control reports that voice input is unsupported.
+- The displayed assistant response is Markdown rendered with a sanitizer. Export actions download the current conversation as Markdown or JSON.
+
+### Appearance and local browser state
+
+The light/dark theme preference is stored in browser local storage. Incognito mode applies a separate charcoal, neutral color theme; leaving Incognito returns to the selected regular theme. Incognito prevents app database persistence, but it does not prevent the AI provider from processing the prompt.
+
+## Component map
+
+| File | Responsibility |
+|---|---|
+| `src/main.jsx` | Creates the React root and imports global styles |
+| `src/App.jsx` | Global page state, session loading, message streaming, archive actions, and header controls |
+| `src/components/LandingPage.jsx` | Landing page and its navigation actions |
+| `src/components/Workspace.jsx` | Chat workspace, session list, composer, message rendering, and insights panel |
+| `src/components/Icon.jsx` | Shared SVG icon set |
+| `src/styles.css` | Responsive layout, component styles, regular themes, and Incognito theme |
+| `vite.config.js` | Local host/port settings and API/health proxy |
+
+The Vite entry page is `index.html`, which loads `src/main.jsx`. The top-level `script.js` and `style.css` are legacy files and are not imported by the current React entry point.
+
+## Scripts and outputs
+
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Start the local Vite development server |
+| `npm run build` | Create the optimized static bundle in `dist/` |
+| `npm run preview` | Serve the built bundle locally for a production-style check |
+
+`dist/` and `node_modules/` are generated locally and are excluded from Git. No frontend lint or test script is defined in `package.json`.
+
+## Backend connection and production hosting
+
+The development proxy forwards both `/api` and `/health` to `http://127.0.0.1:8000`. This is why the browser can use relative URLs during `npm run dev`.
+
+The proxy only applies to the Vite development server. This repository does not include Vercel, Netlify, or other hosting configuration. For production, host the built `dist/` files and configure the same origin or the hosting platform's reverse proxy to send `/api` and `/health` requests to FastAPI. Configure CORS and authentication on the backend before exposing it beyond a trusted environment. Do not put Groq or database credentials in frontend files; browser bundles are public.
+
+## More troubleshooting
+
+### Sidebar says the backend is offline
+
+1. Make sure Uvicorn is still running in the backend terminal.
+2. Open `http://127.0.0.1:8000/health`.
+3. Check `frontend/vite.config.js` still proxies `/api` and `/health` to port 8000.
+4. Refresh the browser page after restarting either server.
+
+### The UI loads but sending a message fails
+
+Check the backend terminal for Groq or database errors. A successful `/health` response means the API process is reachable; it does not prove that the configured Groq key or model is valid. The backend troubleshooting guide has provider and database checks.
+
+### Port 5173 is busy
+
+Close the other Vite process with `Ctrl+C`. Since `strictPort` is enabled, Vite will report an error rather than use another port.
+
+### An attachment is rejected
+
+Use a supported text extension and keep the file below 200 KB. This UI does not upload images or arbitrary binary documents.

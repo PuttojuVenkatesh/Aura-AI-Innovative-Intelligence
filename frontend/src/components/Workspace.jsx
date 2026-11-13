@@ -158,6 +158,7 @@ export default function Workspace({
   incognito,
   onOpenArchives,
   onArchiveSession,
+  onDeleteSession,
 }) {
   const [query, setQuery] = useState("");
   const [input, setInput] = useState("");
@@ -297,6 +298,7 @@ export default function Workspace({
                         <span className="history-item-meta">{session.preview || "Open conversation"}<time>{timeAgo(session.updated_at)}</time></span>
                       </button>
                       <button className="history-archive" onClick={() => onArchiveSession(session)} aria-label={`Archive ${session.title || "conversation"}`} title="Archive chat"><Icon name="archive" size={15} /></button>
+                      <button className="history-delete" onClick={() => onDeleteSession(session)} aria-label={`Delete ${session.title || "conversation"}`} title="Delete chat" disabled={isBusy && selectedSessionId === session.session_id}><Icon name="trash" size={15} /></button>
                     </div>
                   ))}
                 </section>

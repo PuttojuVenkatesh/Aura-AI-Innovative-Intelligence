@@ -13,6 +13,7 @@ from app.schemas.assistant import AssistantResult
 from app.services.database_service import (
     archive_conversation,
     add_chat_exchange,
+    delete_conversation,
     get_chat_history,
     get_conversation_messages,
     initialize_database,
@@ -123,6 +124,12 @@ def archive_chat(session_id: str):
     if not archive_conversation(session_id):
         raise HTTPException(status_code=404, detail="Conversation not found or already archived.")
     return {"status": "archived"}
+
+@app.delete("/api/conversations/{session_id}")
+def delete_chat(session_id: str):
+    if not delete_conversation(session_id):
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+    return {"status": "deleted"}
 
 
 @app.post("/api/conversations/{session_id}/restore")

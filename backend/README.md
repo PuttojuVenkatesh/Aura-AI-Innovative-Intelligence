@@ -72,6 +72,7 @@ There is no `/` endpoint. Stop the server with `Ctrl+C`. Restart it after editin
 | `GET` | `/api/conversations` | Lists active conversations |
 | `GET` | `/api/conversations/{session_id}/messages` | Returns messages and their saved metadata |
 | `POST` | `/api/conversations/{session_id}/archive` | Archives an active conversation |
+| `DELETE` | `/api/conversations/{session_id}` | Permanently deletes a conversation and its messages |
 | `POST` | `/api/conversations/{session_id}/restore` | Restores an archived conversation |
 | `GET` | `/api/conversations/archived` | Lists archived conversations and their deletion dates |
 

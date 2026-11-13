@@ -59,6 +59,8 @@ export default function App() {
   const [incognito, setIncognito] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archivedSessions, setArchivedSessions] = useState([]);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deletingSessionId, setDeletingSessionId] = useState(null);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -128,6 +130,27 @@ export default function App() {
       notify(error.message || "Could not archive this conversation.");
     }
   }, [notify, refreshSessions, selectedSessionId]);
+
+  const deleteSession = useCallback(async (session) => {
+    setDeletingSessionId(session.session_id);
+    try {
+      const response = await fetch(apiUrl(`/api/conversations/${encodeURIComponent(session.session_id)}`), { method: "DELETE" });
+      if (!response.ok) throw new Error(await errorText(response, "Could not delete this conversation."));
+      setSessions((items) => items.filter((item) => item.session_id !== session.session_id));
+      if (selectedSessionId === session.session_id) {
+        setSelectedSessionId(null);
+        setSelectedTitle("");
+        setMessages([]);
+        setMetadata(null);
+      }
+      setDeleteTarget(null);
+      notify("Conversation permanently deleted.");
+    } catch (error) {
+      notify(error.message || "Could not delete this conversation.");
+    } finally {
+      setDeletingSessionId(null);
+    }
+  }, [notify, selectedSessionId]);
 
   const restoreArchivedSession = useCallback(async (session) => {
     try {
@@ -419,10 +442,22 @@ export default function App() {
           incognito={incognito}
           onOpenArchives={openArchives}
           onArchiveSession={archiveSession}
+          onDeleteSession={setDeleteTarget}
         />
       )}
 
       {modal && <Dialog title={modal.title} onClose={() => setModal(null)}>{modal.body}</Dialog>}
+      {deleteTarget && (
+        <Dialog title="Delete conversation?" onClose={() => setDeleteTarget(null)}>
+          <p className="modal-copy"><b>{deleteTarget.title || "Conversation"}</b> and all its messages will be permanently deleted. This cannot be undone.</p>
+          <div className="modal-actions">
+            <button className="button button-outline" onClick={() => setDeleteTarget(null)} disabled={deletingSessionId === deleteTarget.session_id}>Cancel</button>
+            <button className="button button-danger" onClick={() => deleteSession(deleteTarget)} disabled={deletingSessionId === deleteTarget.session_id}>
+              {deletingSessionId === deleteTarget.session_id ? "Deleting..." : "Delete"}
+            </button>
+          </div>
+        </Dialog>
+      )}
       {archiveOpen && (
         <Dialog title="Archived chats" onClose={() => setArchiveOpen(false)}>
           <p className="modal-copy">Archived chats are automatically deleted after no more than 30 days.</p>

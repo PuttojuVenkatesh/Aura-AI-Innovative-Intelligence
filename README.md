@@ -94,6 +94,7 @@ Use the connection string provided by Neon, including its SSL settings. Restart 
 | `GET` | `/api/conversations` | List active conversations |
 | `GET` | `/api/conversations/{session_id}/messages` | Load a conversation |
 | `POST` | `/api/conversations/{session_id}/archive` | Archive a conversation |
+| `DELETE` | `/api/conversations/{session_id}` | Permanently delete a conversation and its messages |
 | `POST` | `/api/conversations/{session_id}/restore` | Restore an archived conversation |
 | `GET` | `/api/conversations/archived` | List archived conversations and their expiry dates |
 

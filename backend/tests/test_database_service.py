@@ -172,3 +172,19 @@ def test_archive_restore_and_expiration_endpoints(tmp_path, monkeypatch):
             )
         assert client.get("/api/conversations/archived").json() == []
         assert database_service.get_conversation_messages("archive-session") == []
+
+
+def test_delete_conversation_endpoint_removes_chat_and_messages(tmp_path, monkeypatch):
+    database_path = tmp_path / "chat.db"
+    monkeypatch.setattr(database_service, "db_path", database_path)
+    monkeypatch.setattr(database_service, "USE_POSTGRES", False)
+    database_service.initialize_database()
+    database_service.add_chat_exchange("delete-session", "Hello", "Hi there.")
+
+    with TestClient(main.app) as client:
+        response = client.delete("/api/conversations/delete-session")
+        assert response.status_code == 200
+        assert response.json() == {"status": "deleted"}
+        assert client.get("/api/conversations").json() == []
+        assert client.get("/api/conversations/delete-session/messages").json() == []
+        assert client.delete("/api/conversations/delete-session").status_code == 404

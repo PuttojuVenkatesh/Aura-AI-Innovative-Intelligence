@@ -1,0 +1,22 @@
+# Secrets and local environment
+.env
+**/.env
+
+# Local editor settings
+.vscode/
+
+# Python environments, caches, and local data
+**/venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.cph/
+backend/data/*.db
+backend/data/*.sqlite*
+
+# Frontend dependencies and build output
+**/node_modules/
+**/dist/
+
+# Incidental install logs
+/3.2
+/backend/3.2
